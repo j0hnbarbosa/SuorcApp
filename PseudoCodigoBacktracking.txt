@@ -1,0 +1,15 @@
+Entrada: Matriz com dimensões de 9 × 9
+     M = {{1, ..., 9}, ..., {3, ..., 5}} de inteiros,
+    representando a grade de um jogo de Sudoku
+    parcialmente preenchida com alguns dígitos
+Saída: Matriz de dimensões 9 × 9
+          S = {{a11, ..., a19}, ..., {a91, ..., a99}} de
+          inteiros, representando a grade do Sudoku
+          por M solucionado
+1 (x, y) ← encontrar uma célula vazia de M
+2 PARA c em candidatos de M em (x, y) FAÇA
+3      M[x][y] ← c
+4      S ← Backtracking(M)
+5   SE S é válido e está totalmente preenchido ENTÃO
+6      RETORNA S
+7   RETORNA nenhuma solução encontrada
