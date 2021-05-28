@@ -1,6 +1,10 @@
 package com.finish.suorcapp;
 
 
+        import android.content.Intent;
+        import android.graphics.Bitmap;
+        import android.graphics.BitmapFactory;
+        import android.net.Uri;
         import android.os.Bundle;
         import android.util.Log;
 
@@ -9,11 +13,7 @@ package com.finish.suorcapp;
         import android.view.SurfaceView;
         import android.view.View;
         import android.view.WindowManager;
-        import android.widget.Button;
         import android.widget.ImageView;
-        import android.widget.SeekBar;
-        import android.widget.SeekBar.OnSeekBarChangeListener;
-        import android.widget.TextView;
         import android.widget.Toast;
 
         import org.opencv.android.CameraActivity;
@@ -24,15 +24,14 @@ package com.finish.suorcapp;
         import org.opencv.core.Core;
         import org.opencv.core.CvType;
         import org.opencv.core.Mat;
-        import org.opencv.core.MatOfPoint;
-        import org.opencv.core.MatOfPoint2f;
         import org.opencv.core.Point;
         import org.opencv.core.Rect;
         import org.opencv.core.Scalar;
-        import org.opencv.core.Size;
         import org.opencv.imgproc.Imgproc;
 
-        import java.util.ArrayList;
+        import java.io.FileNotFoundException;
+        import java.io.InputStream;
+        import java.net.URI;
         import java.util.Collections;
         import java.util.List;
 
@@ -46,6 +45,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
 
     private final String BUTTON_DRAWN = "DRAWN";
+    private final String BUTTON_TAKE_PHOTO = "TAKE_PHOTO";
 
     String switchOption = "";
 
@@ -109,6 +109,19 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         this.switchOption = option;
     }
 
+    /**
+     * Crop the image by the specific size of the contours
+     * @param matRGBA current frame
+     */
+    public void handleTakeAndShowPhoto(Mat matRGBA) {
+            Bitmap bi = Bitmap.createBitmap(matRGBA.width(), matRGBA.height(), Bitmap.Config.RGB_565);
+
+            Utils.matToBitmap(matRGBA, bi);
+
+            iv.setImageBitmap(bi);
+
+    }
+
     @Override
     public void onCameraViewStarted(int width, int height) {
         mRGBA = new Mat(height, width, CvType.CV_8UC4);
@@ -144,14 +157,12 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Log.d("changeColorCount", "onCameraFrame");
-        mRGBA = inputFrame.rgba();
 
         switch (switchOption){
             case BUTTON_DRAWN:
                 mRGBA = inputFrame.rgba();
                 drawnRectangle(mRGBA);
                 break;
-
 
             default:
                 Log.e("INVALID OPTION", switchOption);
@@ -185,16 +196,53 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         }
     }
 
+    @Override
+    protected void onActivityResult(int reqCode, int resultCode, Intent data) {
+        super.onActivityResult(reqCode, resultCode, data);
+
+
+        if (resultCode == RESULT_OK) {
+            try {
+                final Uri imageUri = data.getData();
+                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                iv.setImageBitmap(selectedImage);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
+            }
+
+        }else {
+            Toast.makeText(this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+        }
+    }
+
     public void onOpenGalery(View e) {
         Log.d("Open galery", "Open galery");
 
         Log.d("DRAW RecTangule", "Draw Rectangule in the image of the camera");
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        startActivityForResult(photoPickerIntent, 0);
+
+
+//        Uri uri_str = Uri.parse("content://media/internal/images/media");
+//        Intent intent = new Intent(Intent.ACTION_PICK, Uri.parse("content://media/internal/images/media"));
+//        startActivityForResult(intent, 0);
+//        if(uri_str != null) {
+//            iv.setImageURI(uri_str);
+//        }
+
     }
 
     public void onOpenCamera(View e) {
         Log.d("Take Photo", "Take Photo");
             setSwitchOption(BUTTON_DRAWN);
 
+    }
+
+    public void onTakePhoto(View view) {
+        handleTakeAndShowPhoto(mRGBA);
     }
 
 }

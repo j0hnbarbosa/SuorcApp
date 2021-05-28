@@ -5,7 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:onClick="onOpenGalery"
     tools:context=".MainActivity">
 
 
@@ -21,27 +20,28 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0"
         opencv:camera_id="any"
-        opencv:show_fps="true" />
+        opencv:show_fps="false" />
+
 
     <ImageView
         android:id="@+id/imageView_id"
-        android:layout_width="271dp"
-        android:layout_height="147dp"
+        android:layout_width="321dp"
+        android:layout_height="167dp"
         android:contentDescription="@string/imageCroped"
         android:src="@drawable/ic_launcher_foreground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.043"
+        app:layout_constraintHorizontal_bias="0.566"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/CameraView"
-        app:layout_constraintVertical_bias="0.032" />
-
+        app:layout_constraintVertical_bias="0.324" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="97dp"
         android:layout_height="80dp"
-        android:backgroundTint="@color/teal_700"
+        android:backgroundTint="@color/purple_700"
+        android:onClick="onOpenGalery"
         app:icon="@android:drawable/ic_menu_gallery"
         app:iconPadding="24dp"
         app:iconSize="64dp"
@@ -66,6 +66,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.84" />
+
+    <Button
+        android:id="@+id/tale_photo"
+        android:layout_width="94dp"
+        android:layout_height="75dp"
+        android:backgroundTint="@color/design_default_color_secondary_variant"
+        android:onClick="onTakePhoto"
+        app:icon="@drawable/camera_img2"
+        app:iconSize="64dp"
+        app:iconTint="?android:attr/textColorPrimaryNoDisable"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.468"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.406" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
