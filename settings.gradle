@@ -1,2 +1,3 @@
+include ':openCvSdk'
 include ':app'
 rootProject.name = "SuorcApp"
