@@ -27,6 +27,7 @@ package com.finish.suorcapp;
         import org.opencv.core.Point;
         import org.opencv.core.Rect;
         import org.opencv.core.Scalar;
+        import org.opencv.core.Size;
         import org.opencv.imgproc.Imgproc;
 
         import java.io.FileNotFoundException;
@@ -114,12 +115,25 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
      * @param matRGBA current frame
      */
     public void handleTakeAndShowPhoto(Mat matRGBA) {
-            Bitmap bi = Bitmap.createBitmap(matRGBA.width(), matRGBA.height(), Bitmap.Config.RGB_565);
+            int width = matRGBA.width() - 200;
+            int height = matRGBA.height() - 200;
 
-            Utils.matToBitmap(matRGBA, bi);
+            Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            Rect rect = new Rect(100, 100, width, height);
+
+            Utils.matToBitmap(matRGBA.submat(rect) , bi);
 
             iv.setImageBitmap(bi);
+    }
 
+    /**
+     * Apply blur to the image
+     * @param matRGBA current frame
+     */
+    public Mat applyBlur(Mat matRGBA) {
+        Mat dst = new Mat();
+        Imgproc.blur(matRGBA, dst, new Size(50, 1.5));
+        return dst;
     }
 
     @Override
