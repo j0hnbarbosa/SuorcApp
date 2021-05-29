@@ -4,6 +4,7 @@ package com.finish.suorcapp;
         import android.content.Intent;
         import android.graphics.Bitmap;
         import android.graphics.BitmapFactory;
+        import android.graphics.Color;
         import android.net.Uri;
         import android.os.Bundle;
         import android.util.Log;
@@ -43,6 +44,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
     Mat mRGBA;
     Mat mRGBAT;
+    final int WIDTH_CROP = 150;
 
 
     private final String BUTTON_DRAWN = "DRAWN";
@@ -85,6 +87,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                 }
             }
         };
+
     }
 
 
@@ -115,15 +118,18 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
      * @param matRGBA current frame
      */
     public void handleTakeAndShowPhoto(Mat matRGBA) {
-            int width = matRGBA.width() - 200;
+            int width = matRGBA.width() - WIDTH_CROP * 2;
             int height = matRGBA.height() - 200;
 
-            Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            Rect rect = new Rect(100, 100, width, height);
+            if(width > 0 && height > 0) {
+                Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+                Rect rect = new Rect(WIDTH_CROP, 100, width, height);
 
-            Utils.matToBitmap(matRGBA.submat(rect) , bi);
+                Utils.matToBitmap(matRGBA.submat(rect) , bi);
 
-            iv.setImageBitmap(bi);
+                iv.setImageBitmap(bi);
+            }
+
     }
 
     /**
@@ -161,8 +167,8 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         int value = matRGBA.width();
 
 
-        Point sizeOfFigure =  new Point( 100, 100);
-        Point positionInTheScreen =  new Point(matRGBA.width() -100  , matRGBA.height() - 100 );
+        Point sizeOfFigure =  new Point( WIDTH_CROP, 100);
+        Point positionInTheScreen =  new Point(matRGBA.width() - WIDTH_CROP  , matRGBA.height() - 100 );
 
         Imgproc.rectangle(matRGBA, new Rect(sizeOfFigure, positionInTheScreen), new Scalar(0, 255, 0, 0), 5);
     }
@@ -240,23 +246,27 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         startActivityForResult(photoPickerIntent, 0);
 
 
-//        Uri uri_str = Uri.parse("content://media/internal/images/media");
-//        Intent intent = new Intent(Intent.ACTION_PICK, Uri.parse("content://media/internal/images/media"));
-//        startActivityForResult(intent, 0);
-//        if(uri_str != null) {
-//            iv.setImageURI(uri_str);
-//        }
-
     }
 
     public void onOpenCamera(View e) {
         Log.d("Take Photo", "Take Photo");
+        if(baseLoaderCallback != null) {
+            cameraBridgeViewBase.enableView();
             setSwitchOption(BUTTON_DRAWN);
-
+        }
     }
 
     public void onTakePhoto(View view) {
-        handleTakeAndShowPhoto(mRGBA);
+        if(cameraBridgeViewBase.isEnabled()) {
+            handleTakeAndShowPhoto(mRGBA);
+        }
+
+    }
+
+    public void onCloseCamera(View view){
+        if(cameraBridgeViewBase != null) {
+            cameraBridgeViewBase.disableView();
+        }
     }
 
 }
