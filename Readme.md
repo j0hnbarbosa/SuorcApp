@@ -48,5 +48,8 @@ https://opencv.org/releases/
 **3** - Select the SDK of the OpenCv and Click on the Ok button.
 
 
+# SuorcApp detecting grid of the Sudoku
+![Image of Yaktocat](/imgs/showAppWorking.gif)
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
