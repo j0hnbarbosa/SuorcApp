@@ -1,21 +1,52 @@
-- [x] Converta a imagem para escala cinza:
-
-- [x] ConvertaAplique blur na imagem:
-
-- [x] Use adaptiveThreshold para encontrar curvas:
-
-- [x] Encontre todas as curvas que aparece na imagem:
-
-- [x] Encontre as curvas que se ligam entre si e formam a maior area entre todas as curvas:
-
-- [x] Faça o crop do Sudoku usando o contorno de sua grade.
-
-- [ ] Encontre a posição dos número nas grades do Sudoku.
-
-- [ ] Use o tesseract para identificar os núumeros.
-
-- [ ] Resolva o jogo de Sudoku.
-
-- [ ] Exiba na tela o a solução do jogo.
+# SuorcApp - Sudoku OCR Application
+### This is a simple Android App that detects a Sudoku in an image and Solve it.
 
 
+## Steps
+
+- [x] Convert the image to gray scale.
+
+- [x]  Apply blur to the image.
+
+- [x]   Aply adaptiveThreshold to find curves.
+
+ - [x]  Find all the curves that appear in the image.
+
+ - [x]  Find the curves that connect to each other and form the biggest area between all the curves.
+
+ - [x]  Crop Sudoku using the outline of your grid.
+
+ - [ ]  Find the position of the numbers in the Sudoku grids.
+
+ - [ ]  Use tesseract to identify numbers.
+
+ - [ ]  Solve the Sudoku game.
+
+ - [ ]  Display the game solution on the screen.
+
+ - [ ]  User can click on the image to zoom it.
+
+## Download OpenCv
+
+Download **openCv 4.5.1** or later
+
+https://opencv.org/releases/
+
+## Import the OpenCv SDK
+
+**1** - Open Android Studio (This steps was used in **Android Stuio 4.1.3**)
+**2** - File -> New -> Import Module
+**3** - Go to where you have downloaded the OpenCV and select the directory **SDK**
+**4** - Click Finish
+
+**Adding the OpenCv Module to your project:**
+**1** - File -> Project Structure
+**2** - (1) Click on Dependencies -> select your project(My is **app**) - > (3) click on the plus button -> (4) click on Module Dependency
+
+![Image of Yaktocat](/imgs/AddingOpenCVModuleToYourProject.png)
+
+**3** - Select the SDK of the OpenCv and Click on the Ok button.
+
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
