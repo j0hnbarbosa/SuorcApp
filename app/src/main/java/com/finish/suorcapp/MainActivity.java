@@ -4,7 +4,6 @@ package com.finish.suorcapp;
         import android.content.Intent;
         import android.graphics.Bitmap;
         import android.graphics.BitmapFactory;
-        import android.graphics.Color;
         import android.net.Uri;
         import android.os.Bundle;
         import android.util.Log;
@@ -25,6 +24,7 @@ package com.finish.suorcapp;
         import org.opencv.core.Core;
         import org.opencv.core.CvType;
         import org.opencv.core.Mat;
+        import org.opencv.core.MatOfPoint;
         import org.opencv.core.Point;
         import org.opencv.core.Rect;
         import org.opencv.core.Scalar;
@@ -33,7 +33,7 @@ package com.finish.suorcapp;
 
         import java.io.FileNotFoundException;
         import java.io.InputStream;
-        import java.net.URI;
+        import java.util.ArrayList;
         import java.util.Collections;
         import java.util.List;
 
@@ -44,7 +44,12 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
     Mat mRGBA;
     Mat mRGBAT;
-    final int WIDTH_CROP = 150;
+
+    final int WIDTH_CROP = 120;
+    final int HEIGHT_CROP = 80;
+
+    boolean changeMethodToSave = false;
+    MatOfPoint rectPos;
 
 
     private final String BUTTON_DRAWN = "DRAWN";
@@ -77,7 +82,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                 switch (status) {
                     case BaseLoaderCallback.SUCCESS: {
                         Log.i("TAG", "OpenCV loaded successfully!");
-                        cameraBridgeViewBase.enableView();
+//                        cameraBridgeViewBase.enableView();
                         break;
                     }
                     default: {
@@ -117,19 +122,82 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
      * Crop the image by the specific size of the contours
      * @param matRGBA current frame
      */
-    public void handleTakeAndShowPhoto(Mat matRGBA) {
+    public void handleDrawContoursScreen(Mat matRGBA) {
             int width = matRGBA.width() - WIDTH_CROP * 2;
-            int height = matRGBA.height() - 200;
+            int height = matRGBA.height() - HEIGHT_CROP * 2;
 
             if(width > 0 && height > 0) {
-                Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                Rect rect = new Rect(WIDTH_CROP, 100, width, height);
+//                ========================================================================
+//                Etapa 1: Detecção de quebra-cabeças
 
-                Utils.matToBitmap(matRGBA.submat(rect) , bi);
+                // ******* applying filters *****************
+                // Gray
+                Mat grayMat = new Mat();
+                Imgproc.cvtColor(matRGBA, grayMat, Imgproc.COLOR_BGR2GRAY);
 
-                iv.setImageBitmap(bi);
+                // Blur
+                Mat blurMat = new Mat();
+                Imgproc.GaussianBlur(grayMat, blurMat, new Size(7, 7), 3);
+
+                // Canny
+//                Mat cannyMat = new Mat();
+//                Imgproc.Canny(blurMat, cannyMat, 0, 255, 3, true);
+
+                // Thresh
+                Mat threshMat = new Mat();
+                Imgproc.adaptiveThreshold(blurMat, threshMat, 255,
+                        Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2);
+                Core.bitwise_not(threshMat, threshMat);
+
+                List contours = new ArrayList<MatOfPoint>();
+
+                Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+
+                double maxVal = 0;
+                int maxValIdx = 0;
+
+                for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++)
+                {
+                    int countourLenth = ((MatOfPoint) contours.get(contourIdx)).toArray().length;
+                    if(countourLenth >= 4 && countourLenth <= 300) {
+                        double contourArea = Imgproc.contourArea((MatOfPoint)contours.get(contourIdx));
+                        if (maxVal < contourArea)
+                        {
+                            maxVal = contourArea;
+                            maxValIdx = contourIdx;
+                        }
+                    }
+                }
+
+                MatOfPoint a = ((MatOfPoint) contours.get(maxValIdx));
+                Point[] p = a.toArray();
+                Mat mDrawn = Mat.zeros(mRGBA.size(), CvType.CV_8U);
+
+                Imgproc.drawContours(mRGBA, contours, maxValIdx, new Scalar(0, 255, 255), 5);
+                rectPos = (MatOfPoint)contours.get(maxValIdx);
+
+//                mRGBA = mDrawn.clone();
+
+//                Core.bitwise_not( mRGBA, mRGBA ); // Applying bitwise in the original image maybe can improve the image detection.
+
+//                  mRGBA = threshMat.clone();
+
+//              ================================================================================================
+//            if(!changeMethodToSave) {
+//                Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+//                Rect rect = new Rect(WIDTH_CROP, HEIGHT_CROP, width, height);
+//                Utils.matToBitmap(matRGBA.submat(rect) , bi);
+//
+//                iv.setImageBitmap(bi);
+//            }
+
+
+                grayMat.release();
+                blurMat.release();
+//                cannyMat.release();
+                threshMat.release();
             }
-
     }
 
     /**
@@ -167,8 +235,8 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         int value = matRGBA.width();
 
 
-        Point sizeOfFigure =  new Point( WIDTH_CROP, 100);
-        Point positionInTheScreen =  new Point(matRGBA.width() - WIDTH_CROP  , matRGBA.height() - 100 );
+        Point sizeOfFigure =  new Point( WIDTH_CROP - 10, HEIGHT_CROP - 10);
+        Point positionInTheScreen =  new Point(matRGBA.width() - WIDTH_CROP  , matRGBA.height() - HEIGHT_CROP);
 
         Imgproc.rectangle(matRGBA, new Rect(sizeOfFigure, positionInTheScreen), new Scalar(0, 255, 0, 0), 5);
     }
@@ -182,6 +250,11 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             case BUTTON_DRAWN:
                 mRGBA = inputFrame.rgba();
                 drawnRectangle(mRGBA);
+
+                if(changeMethodToSave) {
+                    handleDrawContoursScreen(mRGBA);
+                }
+
                 break;
 
             default:
@@ -244,28 +317,75 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         startActivityForResult(photoPickerIntent, 0);
-
-
     }
 
     public void onOpenCamera(View e) {
         Log.d("Take Photo", "Take Photo");
         if(baseLoaderCallback != null) {
+            cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
             cameraBridgeViewBase.enableView();
+            changeMethodToSave = true;
             setSwitchOption(BUTTON_DRAWN);
         }
     }
 
-    public void onTakePhoto(View view) {
-        if(cameraBridgeViewBase.isEnabled()) {
-            handleTakeAndShowPhoto(mRGBA);
-        }
+    public int notReturnNegative(int val1, int val2) {
+        if(val1 >= val2)  return (int)(val1 - val2);
+        return (int)(val2 - val1);
+    }
 
+
+    public void onTakePhoto(View view) {
+        if(changeMethodToSave) {
+            Point [] reactPonintArr = rectPos.toArray();
+
+            int midlePos = (int)reactPonintArr.length /2;
+            int lastPos = reactPonintArr.length - 1;
+
+            int minY = Integer.MAX_VALUE;
+            int minX = Integer.MAX_VALUE;
+
+            for(int i =0; i < reactPonintArr.length; i++) {
+                if(reactPonintArr[i].y < minY) {
+                    minY = (int)reactPonintArr[i].y;
+                }
+                if(reactPonintArr[i].x < minX) {
+                    minX = (int)reactPonintArr[i].x;
+                }
+            }
+
+            int cropY = minY < mRGBA.width() ? minY : 0;
+            int cropX = minX < mRGBA.height() ? minX : 0;
+
+            int width = notReturnNegative(mRGBA.width(),  cropX);
+            int height = notReturnNegative(mRGBA.height(), cropY);
+
+            // Used to set the values to crop the image that was detected in the screen
+            Rect rect = new Rect(cropX, cropY, (int)width/2, (int)height/2);
+
+            // Used to create a new Mat with the oject that was detected in the screen
+            Mat matSubmat = mRGBA.submat(rect);
+
+            // Used to set the size of the bitmap image
+            Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
+
+            //Used to convert Mat to bitmap
+                 Utils.matToBitmap(matSubmat, bi);
+
+                 // Used to show in the screen the object that was croped.
+                 iv.setImageBitmap(bi);
+
+                matSubmat.release();
+
+            }
     }
 
     public void onCloseCamera(View view){
         if(cameraBridgeViewBase != null) {
+             mRGBA = Mat.zeros(mRGBA.clone().size(), CvType.CV_8U);
+//            cameraBridgeViewBase.setVisibility(SurfaceView.INVISIBLE);
             cameraBridgeViewBase.disableView();
+            changeMethodToSave = false;
         }
     }
 
