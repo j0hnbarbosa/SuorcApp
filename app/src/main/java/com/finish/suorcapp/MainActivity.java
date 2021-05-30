@@ -13,6 +13,7 @@ import org.opencv.android.BaseLoaderCallback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -59,6 +60,9 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
     // Used to allow to draw a rectangle in the screen
     private final String BUTTON_DRAWN = "DRAWN";
 
+    // Used to allow to draw a rectangle in the screen
+    private final String BUTTON_CLOSE_CAMERA = "CLOSE_CAMERA";
+
     // Used to not allow the user try to save a image when the camera is closed.
     String switchOption = "";
 
@@ -70,6 +74,15 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
     // used to show the image of the detected Sudoku in the screen
     ImageView iv;
+
+    // used to show the a black background when the camera is not visible.
+    ImageView ivCameraBackground;
+
+    // used to open the Camera.
+    Button btnOpenCamera;
+
+    // used take a photo from CameraView.
+    Button btnTakePhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +97,10 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
 
         iv =  findViewById(R.id.imageView_id);
+        ivCameraBackground = findViewById(R.id.background_camera_img_id);
+        btnOpenCamera = findViewById(R.id.open_camera_id);
+        btnTakePhoto = findViewById(R.id.take_photo_id);
+        btnTakePhoto.setVisibility(SurfaceView.INVISIBLE);
 
         // Initialize the OpenCV
         baseLoaderCallback = new BaseLoaderCallback(this) {
@@ -250,9 +267,10 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                 if(changeMethodToSave) {
                     handleDrawContoursScreen(mRGBA);
                 }
-
                 break;
-
+            case BUTTON_CLOSE_CAMERA: {
+                mRGBA = Mat.zeros(mRGBA.clone().size(), CvType.CV_8U);
+            }
             default:
                 Log.e("INVALID OPTION", switchOption);
                 break;
@@ -320,6 +338,10 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         Log.d("Take Photo", "Take Photo");
         if(baseLoaderCallback != null) {
             cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
+            btnOpenCamera.setVisibility(SurfaceView.INVISIBLE);
+            btnTakePhoto.setVisibility(SurfaceView.VISIBLE);
+            ivCameraBackground.setVisibility(SurfaceView.INVISIBLE);
+
             cameraBridgeViewBase.enableView();
 
             changeMethodToSave = true;
@@ -352,37 +374,57 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
             // Find all contours
             Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            threshMat.release();
 
 // ============================
-
+            // Find the grid of the Sudoku
 
             // Used to set the values to crop the image that was detected in the screen
             Rect rec = Imgproc.boundingRect((MatOfPoint) contours.get(0));
+            contours.clear();
 
             // Used to create a new Mat with the oject that was detected in the screen
             Mat matSubmat = mRGBA.submat(rec);
+
+            threshMat = applyFilters(matMask);
+
+// ============================
+            // Find the cells of the Sudoku
+
+            // Find all contours
+            Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            threshMat.release();
+// ============================
+
 
             // Used to set the size of the bitmap image
             Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
 
             //Used to convert Mat to bitmap
-                 Utils.matToBitmap(matSubmat, bi);
+             Utils.matToBitmap(matSubmat, bi);
 
-                 // Used to show in the screen the object that was croped.
-                 iv.setImageBitmap(bi);
+             // Used to show in the screen the object that was croped.
+             iv.setImageBitmap(bi);
 
-                 // Used to release memory
-                matSubmat.release();
+             // Used to release memory
+             matSubmat.release();
 
             }
     }
 
     public void onCloseCamera(View view){
         if(cameraBridgeViewBase != null) {
-             mRGBA = Mat.zeros(mRGBA.clone().size(), CvType.CV_8U);
-//            cameraBridgeViewBase.setVisibility(SurfaceView.INVISIBLE);
-            cameraBridgeViewBase.disableView();
+            mRGBA = Mat.zeros(mRGBA.clone().size(), CvType.CV_8U);
+            setSwitchOption(BUTTON_CLOSE_CAMERA);
+            btnOpenCamera.setVisibility(SurfaceView.VISIBLE);
+             btnTakePhoto.setVisibility(SurfaceView.INVISIBLE);
+            ivCameraBackground.setVisibility(SurfaceView.VISIBLE);
+
+            cameraBridgeViewBase.setVisibility(SurfaceView.INVISIBLE);
+
             changeMethodToSave = false;
+            cameraBridgeViewBase.disableView();
+
         }
     }
 

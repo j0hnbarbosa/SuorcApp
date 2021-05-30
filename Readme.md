@@ -2,13 +2,13 @@
 ### This is a simple Android App that detects a Sudoku in an image and Solve it.
 
 
-## Steps
+## Steps precessing image
 
 - [x] Convert the image to gray scale.
 
 - [x]  Apply blur to the image.
 
-- [x]   Aply adaptiveThreshold to find curves.
+- [x]   Apply adaptiveThreshold to find curves.
 
  - [x]  Find all the curves that appear in the image.
 
@@ -32,7 +32,7 @@ Download **openCv 4.5.1** or later
 
 https://opencv.org/releases/
 
-## Import the OpenCv SDK
+## Import the OpenCv SDK module to the project
 
 **1** - Open Android Studio (This steps was used in **Android Stuio 4.1.3**)
 **2** - File -> New -> Import Module

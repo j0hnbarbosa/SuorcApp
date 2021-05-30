@@ -10,16 +10,16 @@
 
     <org.opencv.android.JavaCameraView
         android:id="@+id/CameraView"
-        android:layout_width="409dp"
+        android:layout_width="412dp"
         android:layout_height="270dp"
         android:backgroundTint="@color/black"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/background_camera_img_id"
+        app:layout_constraintEnd_toEndOf="@+id/background_camera_img_id"
         app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0"
+        app:layout_constraintStart_toStartOf="@+id/background_camera_img_id"
+        app:layout_constraintTop_toTopOf="@+id/background_camera_img_id"
+        app:layout_constraintVertical_bias="0.0"
         opencv:camera_id="any"
         opencv:show_fps="true" />
 
@@ -36,7 +36,7 @@
         app:layout_constraintVertical_bias="0.324" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/open_galery_id"
         android:layout_width="97dp"
         android:layout_height="80dp"
         android:background="@android:drawable/ic_menu_gallery"
@@ -53,7 +53,7 @@
         app:layout_constraintVertical_bias="0.841" />
 
     <Button
-        android:id="@+id/button4"
+        android:id="@+id/open_camera_id"
         android:layout_width="95dp"
         android:layout_height="84dp"
         android:background="@android:drawable/ic_menu_camera"
@@ -69,7 +69,7 @@
         app:layout_constraintVertical_bias="0.84" />
 
     <Button
-        android:id="@+id/tale_photo"
+        android:id="@+id/take_photo_id"
         android:layout_width="94dp"
         android:layout_height="75dp"
         android:background="@drawable/camera_img2"
@@ -83,7 +83,7 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.434" />
+        app:layout_constraintVertical_bias="0.429" />
 
     <Button
         android:id="@+id/close_camera"
@@ -99,57 +99,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.073" />
 
+    <ImageView
+        android:id="@+id/background_camera_img_id"
+        android:layout_width="412dp"
+        android:layout_height="270dp"
+        android:background="@android:drawable/screen_background_dark"
+        android:backgroundTint="@color/black"
+        android:contentDescription="@string/backgroundImageCameraView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--<?xml version="1.0" encoding="utf-8"?>-->
-<!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    xmlns:tools="http://schemas.android.com/tools"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent"-->
-<!--    tools:context=".MainActivity">-->
-
-<!--    <ImageView-->
-<!--        android:id="@+id/imageView"-->
-<!--        android:layout_width="387dp"-->
-<!--        android:layout_height="221dp"-->
-<!--        android:contentDescription="@string/logo_img"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.333"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintVertical_bias="0.213"-->
-<!--        app:srcCompat="@drawable/logotipo" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/button"-->
-<!--        android:layout_width="97dp"-->
-<!--        android:layout_height="80dp"-->
-<!--        android:backgroundTint="@color/teal_700"-->
-<!--        app:icon="@android:drawable/ic_menu_gallery"-->
-<!--        app:iconPadding="24dp"-->
-<!--        app:iconSize="64dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.165"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintVertical_bias="0.844" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/button4"-->
-<!--        android:layout_width="95dp"-->
-<!--        android:layout_height="84dp"-->
-<!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
-<!--        app:icon="@android:drawable/ic_menu_camera"-->
-<!--        app:iconSize="64dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.821"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintVertical_bias="0.84" />-->
-
-<!--</androidx.constraintlayout.widget.ConstraintLayout>-->
