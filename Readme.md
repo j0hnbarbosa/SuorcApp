@@ -1,6 +1,6 @@
 - [x] Converta a imagem para escala cinza:
 
-- [x] ConvertaAplique blur na imagem:
+- [x] Aplique blur na imagem:
 
 - [x] Use adaptiveThreshold para encontrar curvas:
 
@@ -12,10 +12,10 @@
 
 - [ ] Encontre a posição dos número nas grades do Sudoku.
 
-- [ ] Use o tesseract para identificar os núumeros.
+- [ ] Use o tesseract para identificar os números.
 
 - [ ] Resolva o jogo de Sudoku.
 
-- [ ] Exiba na tela o a solução do jogo.
+- [ ] Exiba na tela a solução do jogo.
 
 
