@@ -1,66 +1,74 @@
 package com.finish.suorcapp;
 
 
-        import android.content.Intent;
-        import android.graphics.Bitmap;
-        import android.graphics.BitmapFactory;
-        import android.net.Uri;
-        import android.os.Bundle;
-        import android.util.Log;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
 
-        import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.BaseLoaderCallback;
 
-        import android.view.SurfaceView;
-        import android.view.View;
-        import android.view.WindowManager;
-        import android.widget.ImageView;
-        import android.widget.Toast;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.Toast;
 
-        import org.opencv.android.CameraActivity;
-        import org.opencv.android.CameraBridgeViewBase;
-        import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-        import org.opencv.android.OpenCVLoader;
-        import org.opencv.android.Utils;
-        import org.opencv.core.Core;
-        import org.opencv.core.CvType;
-        import org.opencv.core.Mat;
-        import org.opencv.core.MatOfPoint;
-        import org.opencv.core.Point;
-        import org.opencv.core.Rect;
-        import org.opencv.core.Scalar;
-        import org.opencv.core.Size;
-        import org.opencv.imgproc.Imgproc;
+import org.opencv.android.CameraActivity;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
-        import java.io.FileNotFoundException;
-        import java.io.InputStream;
-        import java.util.ArrayList;
-        import java.util.Collections;
-        import java.util.List;
-
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MainActivity extends CameraActivity implements CvCameraViewListener2 {
 
     private static final String TAG = MainActivity.class.getName();
 
+    // Used to allow all the methods of the aplication to access the frames of the camera.
     Mat mRGBA;
-    Mat mRGBAT;
 
+    // Used to set the width of the rectangle drawn in the screen.
     final int WIDTH_CROP = 120;
+
+    // Used to set the height of the rectangle drawn in the screen.
     final int HEIGHT_CROP = 80;
 
+    // Used to not allow the user try to save a image when the camera is closed.
     boolean changeMethodToSave = false;
+
+    // Used to get the biggest contour area of the image
     MatOfPoint rectPos;
 
-
+    // Used to allow to draw a rectangle in the screen
     private final String BUTTON_DRAWN = "DRAWN";
-    private final String BUTTON_TAKE_PHOTO = "TAKE_PHOTO";
 
+    // Used to not allow the user try to save a image when the camera is closed.
     String switchOption = "";
 
+    // Used to initialize the camera of the OpenCv.
     CameraBridgeViewBase cameraBridgeViewBase;
 
+    // Used by the OpenCv to initialize.
     BaseLoaderCallback baseLoaderCallback;
 
+    // used to show the image of the detected Sudoku in the screen
     ImageView iv;
 
     @Override
@@ -69,6 +77,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        // Get the camera view.
         cameraBridgeViewBase = (CameraBridgeViewBase) findViewById(R.id.CameraView);
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
@@ -76,6 +85,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
         iv =  findViewById(R.id.imageView_id);
 
+        // Initialize the OpenCV
         baseLoaderCallback = new BaseLoaderCallback(this) {
             @Override
             public void onManagerConnected(int status) {
@@ -101,7 +111,6 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         super.onResume();
         // OpenCV manager initialization
 
-
         if (OpenCVLoader.initDebug()) {
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             baseLoaderCallback.onManagerConnected(baseLoaderCallback.SUCCESS);
@@ -118,6 +127,40 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         this.switchOption = option;
     }
 
+    /***
+     * Used to apply filter to remove traits that is not necessary
+     * @param matOriginal The original Mat that will be applied the filters
+     * @return Mat With all filter applied
+     */
+    public Mat applyFilters(Mat matOriginal) {
+        // ******* applying filters *****************
+
+        // Gray
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(matOriginal, grayMat, Imgproc.COLOR_BGR2GRAY);
+
+        // Blur
+        Mat blurMat = new Mat();
+        Imgproc.GaussianBlur(grayMat, blurMat, new Size(7, 7), 3);
+
+        // Canny
+        // Mat cannyMat = new Mat();
+        // Imgproc.Canny(blurMat, cannyMat, 0, 255, 3, true);
+
+        // Thresh
+        Mat threshMat = new Mat();
+        Imgproc.adaptiveThreshold(blurMat, threshMat, 255,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2);
+        Core.bitwise_not(threshMat, threshMat);
+
+        grayMat.release();
+        blurMat.release();
+//      cannyMat.release();
+
+        return threshMat;
+    }
+
+
     /**
      * Crop the image by the specific size of the contours
      * @param matRGBA current frame
@@ -128,39 +171,28 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
             if(width > 0 && height > 0) {
 //                ========================================================================
-//                Etapa 1: Detecção de quebra-cabeças
 
-                // ******* applying filters *****************
-                // Gray
-                Mat grayMat = new Mat();
-                Imgproc.cvtColor(matRGBA, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-                // Blur
-                Mat blurMat = new Mat();
-                Imgproc.GaussianBlur(grayMat, blurMat, new Size(7, 7), 3);
-
-                // Canny
-//                Mat cannyMat = new Mat();
-//                Imgproc.Canny(blurMat, cannyMat, 0, 255, 3, true);
-
-                // Thresh
-                Mat threshMat = new Mat();
-                Imgproc.adaptiveThreshold(blurMat, threshMat, 255,
-                        Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2);
-                Core.bitwise_not(threshMat, threshMat);
-
+                // Store all contours
                 List contours = new ArrayList<MatOfPoint>();
 
+                Mat threshMat = applyFilters(matRGBA);
+
+                // Find all contours
                 Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
+                threshMat.release();
 
-                double maxVal = 0;
-                int maxValIdx = 0;
+                double maxVal = 0; // Biggest area size
+                int maxValIdx = 0; // Index of the biggest area
 
+                // Search for the index with the biggest area.
                 for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++)
                 {
                     int countourLenth = ((MatOfPoint) contours.get(contourIdx)).toArray().length;
+
+                    // Limit the amount of contour to calculate the area
                     if(countourLenth >= 4 && countourLenth <= 300) {
+                        // Calculate the area.
                         double contourArea = Imgproc.contourArea((MatOfPoint)contours.get(contourIdx));
                         if (maxVal < contourArea)
                         {
@@ -170,44 +202,10 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                     }
                 }
 
-                MatOfPoint a = ((MatOfPoint) contours.get(maxValIdx));
-                Point[] p = a.toArray();
-                Mat mDrawn = Mat.zeros(mRGBA.size(), CvType.CV_8U);
-
-                Imgproc.drawContours(mRGBA, contours, maxValIdx, new Scalar(0, 255, 255), 5);
+                Imgproc.drawContours(mRGBA, contours, maxValIdx , new Scalar(0, 255, 255), 5);
                 rectPos = (MatOfPoint)contours.get(maxValIdx);
 
-//                mRGBA = mDrawn.clone();
-
-//                Core.bitwise_not( mRGBA, mRGBA ); // Applying bitwise in the original image maybe can improve the image detection.
-
-//                  mRGBA = threshMat.clone();
-
-//              ================================================================================================
-//            if(!changeMethodToSave) {
-//                Bitmap bi = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-//                Rect rect = new Rect(WIDTH_CROP, HEIGHT_CROP, width, height);
-//                Utils.matToBitmap(matRGBA.submat(rect) , bi);
-//
-//                iv.setImageBitmap(bi);
-//            }
-
-
-                grayMat.release();
-                blurMat.release();
-//                cannyMat.release();
-                threshMat.release();
             }
-    }
-
-    /**
-     * Apply blur to the image
-     * @param matRGBA current frame
-     */
-    public Mat applyBlur(Mat matRGBA) {
-        Mat dst = new Mat();
-        Imgproc.blur(matRGBA, dst, new Size(50, 1.5));
-        return dst;
     }
 
     @Override
@@ -223,17 +221,11 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
     }
 
 
-    public void flipImage() {
-        mRGBAT = mRGBA.t();
-        Core.flip(mRGBA.t(), mRGBAT, 1);
-        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
-    }
-
-
-
+    /**
+     * Draw a rectangle in the screen to limt the area to detect the Sudoku grade.
+     * @param matRGBA The original Mat with the current frame
+     */
     public void drawnRectangle(Mat matRGBA){
-        int value = matRGBA.width();
-
 
         Point sizeOfFigure =  new Point( WIDTH_CROP - 10, HEIGHT_CROP - 10);
         Point positionInTheScreen =  new Point(matRGBA.width() - WIDTH_CROP  , matRGBA.height() - HEIGHT_CROP);
@@ -241,7 +233,11 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         Imgproc.rectangle(matRGBA, new Rect(sizeOfFigure, positionInTheScreen), new Scalar(0, 255, 0, 0), 5);
     }
 
-
+    /***
+     * Get frame of the camera.
+     * @param inputFrame Frame receive from the camera
+     * @return A frame with modified content.
+     */
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Log.d("changeColorCount", "onCameraFrame");
@@ -260,12 +256,15 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             default:
                 Log.e("INVALID OPTION", switchOption);
                 break;
-
         }
 
         return mRGBA;
     }
 
+    /***
+     * Used to be able to use the camera of the OpenCv
+     * @return
+     */
     @Override
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
         return Collections.singletonList(cameraBridgeViewBase);
@@ -293,7 +292,6 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
     protected void onActivityResult(int reqCode, int resultCode, Intent data) {
         super.onActivityResult(reqCode, resultCode, data);
 
-
         if (resultCode == RESULT_OK) {
             try {
                 final Uri imageUri = data.getData();
@@ -305,7 +303,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                 Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
             }
 
-        }else {
+        } else {
             Toast.makeText(this, "You haven't picked Image",Toast.LENGTH_LONG).show();
         }
     }
@@ -313,7 +311,6 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
     public void onOpenGalery(View e) {
         Log.d("Open galery", "Open galery");
 
-        Log.d("DRAW RecTangule", "Draw Rectangule in the image of the camera");
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         startActivityForResult(photoPickerIntent, 0);
@@ -324,47 +321,46 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         if(baseLoaderCallback != null) {
             cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
             cameraBridgeViewBase.enableView();
+
             changeMethodToSave = true;
+
+            Log.d("DRAW RecTangule", "Draw Rectangule in the image of the camera");
             setSwitchOption(BUTTON_DRAWN);
         }
     }
 
-    public int notReturnNegative(int val1, int val2) {
-        if(val1 >= val2)  return (int)(val1 - val2);
-        return (int)(val2 - val1);
-    }
-
-
     public void onTakePhoto(View view) {
         if(changeMethodToSave) {
-            Point [] reactPonintArr = rectPos.toArray();
 
-            int midlePos = (int)reactPonintArr.length /2;
-            int lastPos = reactPonintArr.length - 1;
+            List<MatOfPoint> lmop = new ArrayList<>();
 
-            int minY = Integer.MAX_VALUE;
-            int minX = Integer.MAX_VALUE;
+            // Used to create an array with the biggest area found
+            lmop.add(rectPos);
 
-            for(int i =0; i < reactPonintArr.length; i++) {
-                if(reactPonintArr[i].y < minY) {
-                    minY = (int)reactPonintArr[i].y;
-                }
-                if(reactPonintArr[i].x < minX) {
-                    minX = (int)reactPonintArr[i].x;
-                }
-            }
+            // Create a Mat with all the colors black
+            Mat matMask = new Mat(mRGBA.rows(), mRGBA.cols(), mRGBA.type(), new Scalar(0, 0, 0));
 
-            int cropY = minY < mRGBA.width() ? minY : 0;
-            int cropX = minX < mRGBA.height() ? minX : 0;
+            // Apply color in the background of the contours in the matMask to know where is the area of the Sudoku
+            Imgproc.fillPoly(matMask, lmop, new Scalar(0, 155, 155));
 
-            int width = notReturnNegative(mRGBA.width(),  cropX);
-            int height = notReturnNegative(mRGBA.height(), cropY);
+// ============================
+            // Store all contours
+            List contours = new ArrayList<MatOfPoint>();
+
+            // Apply filters to remove traits not necessary
+            Mat threshMat = applyFilters(matMask);
+
+            // Find all contours
+            Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+// ============================
+
 
             // Used to set the values to crop the image that was detected in the screen
-            Rect rect = new Rect(cropX, cropY, (int)width/2, (int)height/2);
+            Rect rec = Imgproc.boundingRect((MatOfPoint) contours.get(0));
 
             // Used to create a new Mat with the oject that was detected in the screen
-            Mat matSubmat = mRGBA.submat(rect);
+            Mat matSubmat = mRGBA.submat(rec);
 
             // Used to set the size of the bitmap image
             Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
@@ -375,6 +371,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                  // Used to show in the screen the object that was croped.
                  iv.setImageBitmap(bi);
 
+                 // Used to release memory
                 matSubmat.release();
 
             }
