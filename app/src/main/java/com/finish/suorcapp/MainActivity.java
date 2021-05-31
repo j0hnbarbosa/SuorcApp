@@ -33,6 +33,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,12 @@ import java.util.List;
 public class MainActivity extends CameraActivity implements CvCameraViewListener2 {
 
     private static final String TAG = MainActivity.class.getName();
+
+
+    private DigitClassifier digitClassifier;
+    private static final String LOG_TAG = DigitClassifier.class.getSimpleName();
+
+    int resultDigit = 0;
 
     // Used to allow all the methods of the aplication to access the frames of the camera.
     Mat mRGBA;
@@ -102,6 +109,13 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         btnTakePhoto = findViewById(R.id.take_photo_id);
         btnTakePhoto.setVisibility(SurfaceView.INVISIBLE);
 
+        // Initialize class that use Tensorflow to detect digits.
+        try {
+            digitClassifier = new DigitClassifier(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // Initialize the OpenCV
         baseLoaderCallback = new BaseLoaderCallback(this) {
             @Override
@@ -158,7 +172,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
         // Blur
         Mat blurMat = new Mat();
-        Imgproc.GaussianBlur(grayMat, blurMat, new Size(7, 7), 3);
+        Imgproc.GaussianBlur(grayMat, blurMat, new Size(3, 3), 3);
 
         // Canny
         // Mat cannyMat = new Mat();
@@ -219,7 +233,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                     }
                 }
 
-                Imgproc.drawContours(mRGBA, contours, maxValIdx , new Scalar(0, 255, 255), 5);
+                Imgproc.drawContours(mRGBA, contours, maxValIdx , new Scalar(0, 255, 255), 2);
                 rectPos = (MatOfPoint)contours.get(maxValIdx);
 
             }
@@ -247,7 +261,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         Point sizeOfFigure =  new Point( WIDTH_CROP - 10, HEIGHT_CROP - 10);
         Point positionInTheScreen =  new Point(matRGBA.width() - WIDTH_CROP  , matRGBA.height() - HEIGHT_CROP);
 
-        Imgproc.rectangle(matRGBA, new Rect(sizeOfFigure, positionInTheScreen), new Scalar(0, 255, 0, 0), 5);
+        Imgproc.rectangle(matRGBA, new Rect(sizeOfFigure, positionInTheScreen), new Scalar(0, 255, 0, 0), 4);
     }
 
     /***
@@ -263,6 +277,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             case BUTTON_DRAWN:
                 mRGBA = inputFrame.rgba();
                 drawnRectangle(mRGBA);
+                
 
                 if(changeMethodToSave) {
                     handleDrawContoursScreen(mRGBA);
@@ -397,19 +412,168 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 // ============================
 
 
+//            // Used to set the size of the bitmap image
+//            Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
+//
+//            //Used to convert Mat to bitmap
+//             Utils.matToBitmap(matSubmat, bi);
+//
+//
+//             // Used to show in the screen the object that was croped.
+//             iv.setImageBitmap(bi);
+//
+//
+//            resultDigit = digitsToShow();
+
+
+           Bitmap[][] matArrayCells = findCellsMat(matSubmat);
+           Mat showDetectedPuzzle = Mat.zeros(matSubmat.width(), matSubmat.height(), matSubmat.type());
+
+           int cellYBase = matSubmat.height() / 9;
+           int cellXBase = matSubmat.width() / 9;
+           int cellY = cellYBase;
+           int cellX = cellXBase;
+
+           for(int i = 0; i < 8; i++) {
+
+//                Horizontal line
+                    Imgproc.line(matSubmat, new Point(0, cellY), new Point(matSubmat.width(), cellY), new Scalar(0, 255, 0), 2);
+
+                    // Vertical line
+                    Imgproc.line(matSubmat, new Point(cellX, 0), new Point(cellX, matSubmat.height()), new Scalar(0, 255, 0), 2);
+
+               cellX += cellXBase;
+               cellY += cellYBase;
+           }
+
+            cellX = cellXBase;
+            cellY = cellYBase;
+           for(int row =0; row<8; row++) {
+               for(int col = 0; col < 8; col++) {
+                   int resultDigit = digitsToShow(matArrayCells[row][col]);
+
+                   Imgproc.putText(matSubmat, String.valueOf(resultDigit), new Point(cellX-28,  cellY-12),
+                           Imgproc.FONT_HERSHEY_COMPLEX, 0.7, new Scalar(0, 0, 255));
+
+                   cellY += cellYBase;
+               }
+               cellX += cellXBase;
+               cellY= cellYBase;
+           }
+
+
+
             // Used to set the size of the bitmap image
             Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
 
             //Used to convert Mat to bitmap
-             Utils.matToBitmap(matSubmat, bi);
+            Utils.matToBitmap(matSubmat, bi);
 
-             // Used to show in the screen the object that was croped.
-             iv.setImageBitmap(bi);
+            // Used to show in the screen the object that was croped.
+            iv.setImageBitmap(bi);
+
+
 
              // Used to release memory
              matSubmat.release();
 
+
+
             }
+    }
+
+    public Bitmap[][] findCellsMat(Mat matGrid) {
+        // ============================
+        // ============================
+        // Store all contours
+
+        List contours = new ArrayList<MatOfPoint>();
+
+
+        // Apply filters to remove traits not necessary
+        Mat threshMat = applyFilters(matGrid);
+
+
+        // Find all contours
+        Imgproc.findContours(threshMat, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+
+//        Imgproc.drawContours(matGrid, contours, 0 , new Scalar(255, 255, 0), 1);
+        Bitmap[][] bitmapArrCells = new Bitmap[9][9];
+
+        for (int i =0; i < contours.size(); i++) {
+            Rect rec = Imgproc.boundingRect((MatOfPoint) contours.get(i));
+            Mat matSubmat = matGrid.submat(rec);
+
+
+
+            int cellYBase = matSubmat.height() / 9;
+            int cellXBase = matSubmat.width() / 9;
+
+
+            if(cellXBase > 20 && cellYBase > 20) {
+//                for(int j = 0; j < 8; j++) {
+
+
+
+                    int celXBefore = 0;
+                    for(int a = 0, cellX = cellXBase; a < 8; a++, cellX += cellXBase) {
+                        int celYBefore = 0;
+                        for(int b = 0, cellY = cellYBase; b < 8; b++,  cellY += cellYBase) {
+                            Mat tempCell;
+                            if(cellX < 0 || cellY < 0) {
+                                int here=0;
+                            }
+
+                        if(cellX < matSubmat.width() && celXBefore < matSubmat.width() && cellY < matSubmat.height() && celYBefore < matSubmat.height()) {
+                            // Mat mm = new Mat(celYRow, celYCol, matSubmat.type());
+                            Mat mam = matSubmat.submat(celXBefore, cellX, celYBefore, cellY);
+
+                            if(mam.width() > 28 && mam.height() > 28){
+                                tempCell = mam.submat(0, 28, 0, 28);
+                            } else {
+                                tempCell = mam;
+                            }
+
+
+
+                            // Used to set the size of the bitmap image
+                            Bitmap bis = Bitmap.createBitmap(tempCell.width(), tempCell.height(), Bitmap.Config.RGB_565);
+                            Mat withFilter = applyFilters(tempCell);
+                            //Used to convert Mat to bitmap
+                            Utils.matToBitmap(withFilter, bis);
+
+                            bitmapArrCells[a][b] = bis;
+
+                            celYBefore = cellY;
+
+                            int testDebu= 0;
+                        }
+
+
+                        }
+                        celXBefore = cellX;
+                    }
+
+//                }
+            }
+
+            // Used to set the size of the bitmap image
+            Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
+
+            //Used to convert Mat to bitmap
+            Utils.matToBitmap(matSubmat, bi);
+
+
+            // Used to show in the screen the object that was croped.
+            iv.setImageBitmap(bi);
+        }
+
+
+        threshMat.release();
+
+        return bitmapArrCells;
+
     }
 
     public void onCloseCamera(View view){
@@ -426,6 +590,21 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             cameraBridgeViewBase.disableView();
 
         }
+    }
+
+
+    public int digitsToShow(Bitmap cellBitmap) {
+        int digit = 0;
+        if(digitClassifier != null) {
+//            Bitmap scaledBitmap = Bitmap.createBitmap(digitClassifier.DIM_IMG_SIZE_X, digitClassifier.DIM_IMG_SIZE_Y, Bitmap.Config.RGB_565);
+            digit = digitClassifier.classify(cellBitmap);
+            Log.i(LOG_TAG, String.valueOf(digit));
+            Toast.makeText(getApplicationContext(), String.valueOf(digit), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "digitClassifier is invalid!", Toast.LENGTH_SHORT).show();
+        }
+
+        return digit;
     }
 
 }
