@@ -31,18 +31,21 @@ https://opencv.org/releases/
 ## Import the OpenCv SDK module to the project
 
 **1** - Open Android Studio (This steps was used in **Android Stuio 4.1.3**)
+
 **2** - File -> New -> Import Module
+
 **3** - Go to where you have downloaded the OpenCV and select the directory **SDK**
+
 **4** - Click Finish
 
 **Adding the OpenCv Module to your project:**
 **1** - File -> Project Structure
+
 **2** - (1) Click on Dependencies -> select your project(My is **app**) - > (3) click on the plus button -> (4) click on Module Dependency
 
-![Image of Yaktocat](/imgs/AddingOpenCVModuleToYourProject.png)
+![SuorcApp working](/imgs/AddingOpenCVModuleToYourProject.png)
 
 **3** - Select the SDK of the OpenCv and Click on the Ok button.
-
 
 # SuorcApp detecting grid of the Sudoku
 ![Image of Yaktocat](/imgs/showAppWorking.gif)
