@@ -20,7 +20,7 @@
 
  - [x]  Use tensorflow to identify the numbers.
 
- - [x]  User can click on the image to zoom it.
+ - [ ]  User can click on the image to zoom it.
 
 ## Download OpenCv
 
