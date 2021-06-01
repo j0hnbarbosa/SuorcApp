@@ -2,7 +2,7 @@
 ### This is a simple Android App that detects a Sudoku in an image and Solve it.
 
 
-## Steps precessing image
+## Steps processing image
 
 - [x] Convert the image to gray scale.
 
