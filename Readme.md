@@ -16,15 +16,11 @@
 
  - [x]  Crop Sudoku using the outline of your grid.
 
- - [ ]  Find the position of the numbers in the Sudoku grids.
+ - [x]  Find the position of the numbers in the Sudoku grids.
 
- - [ ]  Use tesseract to identify numbers.
+ - [x]  Use tensorflow to identify the numbers.
 
- - [ ]  Solve the Sudoku game.
-
- - [ ]  Display the game solution on the screen.
-
- - [ ]  User can click on the image to zoom it.
+ - [x]  User can click on the image to zoom it.
 
 ## Download OpenCv
 
