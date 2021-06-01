@@ -38,10 +38,11 @@ https://opencv.org/releases/
 
 **4** - Click Finish
 
-**Adding the OpenCv Module to your project:**
+## Adding the OpenCv Module to your project:
+
 **1** - File -> Project Structure
 
-**2** - (1) Click on Dependencies -> select your project(My is **app**) - > (3) click on the plus button -> (4) click on Module Dependency
+**2** - (1) Click on Dependencies -> select your project(My is **app**) - > (3) click on the plus button -> (4) click on the Module Dependency
 
 ![SuorcApp working](/imgs/AddingOpenCVModuleToYourProject.png)
 
