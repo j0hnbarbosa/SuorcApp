@@ -30,7 +30,7 @@ https://opencv.org/releases/
 
 ## Import the OpenCv SDK module to the project
 
-**1** - Open Android Studio (This steps was used in **Android Stuio 4.1.3**)
+**1** - Open Android Studio (This steps was used in **Android Studio 4.1.3**)
 
 **2** - File -> New -> Import Module
 
