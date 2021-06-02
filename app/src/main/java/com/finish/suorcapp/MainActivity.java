@@ -277,7 +277,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             case BUTTON_DRAWN:
                 mRGBA = inputFrame.rgba();
                 drawnRectangle(mRGBA);
-                
+
 
                 if(changeMethodToSave) {
                     handleDrawContoursScreen(mRGBA);
@@ -472,12 +472,8 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
             // Used to show in the screen the object that was croped.
             iv.setImageBitmap(bi);
 
-
-
              // Used to release memory
              matSubmat.release();
-
-
 
             }
     }
@@ -499,27 +495,23 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 
 
 //        Imgproc.drawContours(matGrid, contours, 0 , new Scalar(255, 255, 0), 1);
+
+        // Used to save the cell of Sudoku grid in a matrix.
         Bitmap[][] bitmapArrCells = new Bitmap[9][9];
 
         for (int i =0; i < contours.size(); i++) {
             Rect rec = Imgproc.boundingRect((MatOfPoint) contours.get(i));
             Mat matSubmat = matGrid.submat(rec);
 
-
-
             int cellYBase = matSubmat.height() / 9;
             int cellXBase = matSubmat.width() / 9;
 
-
             if(cellXBase > 20 && cellYBase > 20) {
-//                for(int j = 0; j < 8; j++) {
-
-
 
                     int celXBefore = 0;
-                    for(int a = 0, cellX = cellXBase; a < 8; a++, cellX += cellXBase) {
+                    for(int a = 0, cellX = cellXBase; a < 9; a++, cellX += cellXBase) {
                         int celYBefore = 0;
-                        for(int b = 0, cellY = cellYBase; b < 8; b++,  cellY += cellYBase) {
+                        for(int b = 0, cellY = cellYBase; b < 9; b++,  cellY += cellYBase) {
                             Mat tempCell;
                             if(cellX < 0 || cellY < 0) {
                                 int here=0;
@@ -529,6 +521,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                             // Mat mm = new Mat(celYRow, celYCol, matSubmat.type());
                             Mat mam = matSubmat.submat(celXBefore, cellX, celYBefore, cellY);
 
+                            // Only take images great than 28 to use with tensorflow
                             if(mam.width() > 28 && mam.height() > 28){
                                 tempCell = mam.submat(0, 28, 0, 28);
                             } else {
@@ -555,18 +548,16 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
                         celXBefore = cellX;
                     }
 
-//                }
             }
 
-            // Used to set the size of the bitmap image
-            Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
-
-            //Used to convert Mat to bitmap
-            Utils.matToBitmap(matSubmat, bi);
-
-
-            // Used to show in the screen the object that was croped.
-            iv.setImageBitmap(bi);
+//            // Used to set the size of the bitmap image
+//            Bitmap bi = Bitmap.createBitmap(matSubmat.width(), matSubmat.height(), Bitmap.Config.RGB_565);
+//
+//            //Used to convert Mat to bitmap
+//            Utils.matToBitmap(matSubmat, bi);
+//
+//            // Used to show in the screen the object that was croped.
+//            iv.setImageBitmap(bi);
         }
 
 
@@ -599,7 +590,7 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
 //            Bitmap scaledBitmap = Bitmap.createBitmap(digitClassifier.DIM_IMG_SIZE_X, digitClassifier.DIM_IMG_SIZE_Y, Bitmap.Config.RGB_565);
             digit = digitClassifier.classify(cellBitmap);
             Log.i(LOG_TAG, String.valueOf(digit));
-            Toast.makeText(getApplicationContext(), String.valueOf(digit), Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), String.valueOf(digit), Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getApplicationContext(), "digitClassifier is invalid!", Toast.LENGTH_SHORT).show();
         }
